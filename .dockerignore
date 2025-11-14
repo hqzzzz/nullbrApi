@@ -1,0 +1,9 @@
+# 先排除所有
+*
+
+# 再一条一条放行
+!package.json
+!package-lock.json
+!app.js
+!routes/
+!routes/*

@@ -1,0 +1,17 @@
+{
+  "name": "nullbrapi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --env-file=.env app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "fastify": "^5.6.2",
+    "qs": "^6.14.0"
+  }
+}
