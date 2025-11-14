@@ -2,25 +2,38 @@ const { api } = require('./common');
 const { fetchMovieMagnets } = require('./movie');
 const { fetchTvMagnets } = require('./tv');
 
-async function searchRoutes(fastify, opts) {
+async function searchRoutes (fastify, opts) {
   fastify.get('/search', async (req, reply) => {
-    const keyword = req.query.keyword || req.query.query;
-    if (!keyword) return reply.code(400).send({ error: 'missing keyword' });
+    /* ---------- tmdbid 直查 ---------- */
+    if (req.query.id && req.query.type) {
+      console.log('tmdbid search' + JSON.stringify(req.query));
+      const type = req.query.type === 'tv' ? 'tv' : 'movie'; // 缺省视为 movie
+      const id = req.query.tmdbid || req.query.id;
+      const item = { tmdbid: Number(id), media_type: type };
+      return type === 'movie'
+        ? await fetchMovieMagnets(item)
+        : await fetchTvMagnets(item);
+    }
 
-    const { data } = await api.get(`/search?query=${encodeURIComponent(keyword)}`);
-    const items = data.items || [];
+    /* ---------- 关键词搜索 ---------- */
+    if (req.query.keyword) {
+      console.log('keyword search' + JSON.stringify(req.query));
+      const { data } = await api.get(`/search?query=${encodeURIComponent(req.query.keyword)}`);
+      const items = data.items || [];
+      const jobs = items.filter(it => it['magnet-flg'] === 1);
+      const movieJobs = jobs.filter(it => it.media_type === 'movie');
+      const tvJobs = jobs.filter(it => it.media_type === 'tv');
 
-    // 按 media_type 分流
-    const jobs = items.filter(it => it['magnet-flg'] === 1);
-    const movieJobs = jobs.filter(it => it.media_type === 'movie');
-    const tvJobs    = jobs.filter(it => it.media_type === 'tv');
+      const [movieRows, tvRows] = await Promise.all([
+        Promise.all(movieJobs.map(fetchMovieMagnets)),
+        Promise.all(tvJobs.map(fetchTvMagnets)),
+      ]);
+      return movieRows.flat().concat(tvRows.flat());
+    }
 
-    // 并发拉取
-    const movieRows = await Promise.all(movieJobs.map(fetchMovieMagnets));
-    const tvRows    = await Promise.all(tvJobs.map(fetchTvMagnets));
+    return reply.code(400).send({ error: 'missing keyword/tmdbid' });
 
 
-    return movieRows.flat().concat(tvRows.flat());
   });
 }
 

@@ -1,0 +1,85 @@
+---
+id: nullbr
+name: 0NullbrApi
+description: "NullBR 节点桥接"
+language: zh-CN
+type: public
+encoding: UTF-8
+
+links:
+  - http://10.10.1.138:9118
+
+caps:
+  categories:
+    2000: Movies           # 接口返回的 category 值 -> Jackett 标准分类
+  modes:
+    search: [q]
+    movie-search: [q,tmdbid]
+
+
+search:
+  paths:
+    # 原始接口就是 /search?keyword={{ .Keywords }}
+    - path: search
+      method: get
+      response:
+        type: json
+  inputs:
+    keyword: "{{ if .Query.TMDBID }}{{ else }}{{ .Keywords }}{{ end }}"
+    id: "{{ .Query.TMDBID }}"
+    type: "{{ .Query.Type }}"
+
+  keywordsfilters:
+    # 空格替换成 +，避免 400
+    - name: re_replace
+      args: ["\\s+", "+"]
+
+  rows:
+    selector: $
+
+  fields:
+    category:
+      selector: category
+    title:
+      selector: title
+    details:
+      selector: details
+    download:
+      selector: download
+    size:
+      selector: size
+    seeders:
+      selector: seeders
+      filters:
+      - name: re_replace       # 如果是 "0" 就改成 "1"
+        args: ["^0$", "1"]
+      - name: to_int           # 转回整数
+    leechers:
+      selector: leechers
+    downloadvolumefactor:
+      selector: downloadvolumefactor
+    uploadvolumefactor:
+      selector: uploadvolumefactor
+    date:
+      selector: date
+      filters:
+        - name: append
+          args: " +08:00"
+        - name: dateparse
+          args: "2006-01-02 -07:00"
+    poster:
+      selector: poster
+      filters:
+        - name: prepend
+          args: "https://image.tmdb.org/t/p/w600_and_h900_bestv2"
+    imdb:
+      selector: details
+      filters:
+        - name: regexp
+          args: "movie/(\\d+)"
+    tmdbid:
+      selector: details
+      filters:
+        - name: regexp
+          args: "movie/(\\d+)"
+# engine n/a
