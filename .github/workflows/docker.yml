@@ -1,11 +1,13 @@
 name: docker
 
 on:
+ 
   push:
     branches: [main, master]
     tags: ['v*']
   pull_request:
     branches: [main, master]
+  workflow_dispatch:
 
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/nullbrApi
