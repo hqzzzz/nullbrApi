@@ -8,13 +8,13 @@ async function fetchMovieMagnets(item) {
    // 先拿元数据
   const { data: detail } = await api.get(`/movie/${tmdbid}`);
   if (!detail || detail['magnet-flg'] !== 1) {
-    return [];          // 没有磁铁资源，直接空数组
+    return [];          // 没有磁力资源，直接空数组
   }
 
   const { data } = await api.get(`/movie/${tmdbid}/magnet`);
   return (data.magnet || []).map(m => ({
     title: m.name || title,
-    category: '1',
+    category: '2000',  // 2000 = Movies
     details: `https://www.themoviedb.org/movie/${tmdbid}`,
     download: m.magnet,
     size: parseSize(m.size),
@@ -26,6 +26,7 @@ async function fetchMovieMagnets(item) {
     date: release_date || new Date().toISOString(),
     poster,
     vote: vote_average,
+    info_hash: (m.magnet.match(/xt=urn:btih:([a-zA-Z0-9]{40})/i) || [])[1] || '',
   }));
 }
 
