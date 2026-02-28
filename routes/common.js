@@ -2,7 +2,7 @@ const axios = require('axios');
 
 // ===== 1. 创建 axios 实例 =====
 const api = axios.create({
-  baseURL: 'https://api.nullbr.eu.org',
+  baseURL: process.env.API_BASE_URL || 'https://api.nullbr.eu.org',
   headers: {
     'X-APP-ID': process.env.APP_ID,
     'X-API-KEY': process.env.API_KEY,
